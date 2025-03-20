@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Upload, X, Folder, FileText, AlertCircle, Loader } from "lucide-react";
 
 export default function FileUploader({ onFilesAnalyzed }) {
@@ -10,22 +10,18 @@ export default function FileUploader({ onFilesAnalyzed }) {
   const folderInputRef = useRef(null);
 
   const allowedExtensions = [".js", ".jsx", ".ts", ".tsx", ".py", ".java", ".c", ".cpp", ".html", ".css"];
-  const excludedFilenames = ["eslint.config.js", "vite.config.js", "package.json", "package-lock.json","_buildManifest.js"];
 
   const isValidFile = (file) => {
     const extension = "." + file.name.split(".").pop().toLowerCase();
-
-    if (file.size === 0) return false; // Exclude empty files
-
-    // Skip node_modules, package files, and excluded filenames
-    if (
-      file.path?.includes("node_modules") ||
-      file.webkitRelativePath?.includes("node_modules") ||
-      excludedFilenames.includes(file.name)
-    ) {
+    
+    // Skip node_modules, package files, and other library files
+    if (file.path?.includes("node_modules") || 
+        file.webkitRelativePath?.includes("node_modules") ||
+        file.name === "package-lock.json" || 
+        file.name === "package.json") {
       return false;
     }
-
+    
     return allowedExtensions.includes(extension);
   };
 
@@ -35,7 +31,7 @@ export default function FileUploader({ onFilesAnalyzed }) {
     if (selectedFiles.length > 0) {
       setFiles((prev) => [...prev, ...selectedFiles]);
     } else {
-      setError("No valid code files found. Please upload supported code files.");
+      setError("No valid code files found. Please upload .js, .jsx, .ts, .tsx, .py, .java, .c, .cpp, .html, or .css files.");
     }
   };
 
@@ -52,42 +48,41 @@ export default function FileUploader({ onFilesAnalyzed }) {
     e.preventDefault();
     setDragActive(false);
     setError("");
-
+    
     const droppedFiles = Array.from(e.dataTransfer.files).filter(isValidFile);
     if (droppedFiles.length > 0) {
       setFiles((prev) => [...prev, ...droppedFiles]);
     } else {
-      setError("No valid code files found. Please upload supported code files.");
+      setError("No valid code files found. Please upload .js, .jsx, .ts, .tsx, .py, .java, .c, .cpp, .html, or .css files.");
     }
   };
 
   const handleSubmit = async () => {
-    const validFiles = files.filter(file => file.size > 0); // Remove empty files
-
-    if (validFiles.length === 0) {
-      setError("Please upload at least one valid code file to generate a quiz.");
+    if (files.length === 0) {
+      setError("Please upload at least one code file to generate a quiz.");
       return;
     }
 
-    setFiles(validFiles); // Update state with only valid files
     setIsLoading(true);
-
+    
     try {
+      // Create a FormData object to send files to the API
       const formData = new FormData();
-      validFiles.forEach(file => {
-        formData.append("files", file);
+      files.forEach(file => {
+        formData.append('files', file);
       });
-
-      const response = await fetch("/api/generateQuiz", {
-        method: "POST",
+      
+      // Send files to the API for analysis
+      const response = await fetch('/api/generateQuiz', {
+        method: 'POST',
         body: formData,
       });
-
+      
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to analyze files");
+        throw new Error(errorData.message || 'Failed to analyze files');
       }
-
+      
       const quizData = await response.json();
       onFilesAnalyzed(quizData);
     } catch (err) {
@@ -98,8 +93,8 @@ export default function FileUploader({ onFilesAnalyzed }) {
   };
 
   return (
-    <div className="w-full h-screen max-h-[100vh] p-4 flex flex-col justify-center items-center bg-gray-50">
-      <div className="bg-white m-5 shadow-xl rounded-xl p-6 w-full max-w-4xl">
+    <div className="w-full h-screen flex flex-col justify-center items-center bg-gray-50 p-4">
+      <div className="bg-white shadow-xl rounded-xl p-6 w-full max-w-4xl">
         <h2 className="text-3xl font-bold text-indigo-700 mb-2">Code Quiz Generator</h2>
         <p className="text-gray-600 mb-6">Upload your code files and our AI will create a personalized quiz to test your knowledge.</p>
 
@@ -158,7 +153,7 @@ export default function FileUploader({ onFilesAnalyzed }) {
                 Clear All
               </button>
             </div>
-            <div className="max-h-28 overflow-y-auto bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <div className="max-h-48 overflow-y-auto bg-gray-50 p-4 rounded-lg border border-gray-200">
               {files.map((file, index) => (
                 <div key={index} className="flex justify-between items-center p-2 hover:bg-gray-100 rounded">
                   <div className="flex items-center">

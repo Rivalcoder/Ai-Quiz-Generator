@@ -1,160 +1,139 @@
-import { useState } from "react";
-import QuizCard from "./components/QuizCard";
-import ProgressBar from "./components/ProgressBar";
-import FileUploader from "./components/FileUploader";
-import confetti from "canvas-confetti";
+// pages/index.js
+import { useRouter } from 'next/router';
+import { motion } from 'framer-motion';
+import Head from 'next/head';
 import "../app/globals.css";
 
 export default function Home() {
-  const [questions, setQuestions] = useState([]);
-  const [quizTitle, setQuizTitle] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [quizCompleted, setQuizCompleted] = useState(false);
-  const [isQuizGenerated, setIsQuizGenerated] = useState(false);
+  const router = useRouter();
 
-  const handleFilesAnalyzed = (data) => {
-    setQuizTitle(data.quizTitle);
-    setQuestions(data.questions);
-    setIsQuizGenerated(true);
-    setCurrentIndex(0);
-    setScore(0);
-    setQuizCompleted(false);
+  const handleStartClick = () => {
+    router.push('/page');
   };
 
   return (
-    <div className="w-full h-screen flex flex-col overflow-hidden bg-gradient-to-br from-blue-200 to-purple-300">
-      {!isQuizGenerated ? (
-        <FileUploader onFilesAnalyzed={handleFilesAnalyzed} />
-      ) : (
-        <div className="flex flex-col w-full h-full max-h-screen bg-white shadow-2xl overflow-hidden">
-          <div className={`${quizCompleted?"hidden":"p-2"} p-4 md:p-6 `}>
-            <h1 className= "text-2xl md:text-4xl font-extrabold text-center text-indigo-700">{quizTitle}</h1>
-            <p className="text-center text-gray-600 mt-1 md:mt-2">Challenge yourself with this quiz!</p>
-          </div>
+    <div className="h-screen bg-gradient-to-br from-gray-900 to-indigo-900 flex flex-col items-center justify-center p-4 overflow-hidden relative">
+      <Head>
+        <title>AI Quiz Generator | Create Custom Quizzes</title>
+        <meta name="description" content="Generate custom quizzes for your projects using AI" />
+      </Head>
 
-          <div className="flex-grow overflow-auto p-4 md:p-6">
-            {!quizCompleted ? (
-              <div className="flex flex-col md:flex-row h-full gap-4">
-                
-                {/* Progress section (left side on desktop) */}
-                <div className="w-full md:w-1/3 mb-4 md:mb-0">
-                  <ProgressBar current={currentIndex + 1} total={questions.length} score={score} />
-                </div>
-                
-                {/* Question section (right side on desktop) */}
-                <div className="w-full md:w-2/3">
-                  <QuizCard question={questions[currentIndex]} onAnswer={(correct) => {
-                    if (correct) {
-                      setScore(score + 1);
-                      confetti({
-                        particleCount: 100,
-                        spread: 70,
-                        origin: { y: 0.6 }
-                      });
-                    }
-                    if (currentIndex < questions.length - 1) {
-                      setCurrentIndex(currentIndex + 1);
-                    } else {
-                      setQuizCompleted(true);
-                      if (score / questions.length >= 0.7) {
-                        confetti({
-                          particleCount: 200,
-                          spread: 180,
-                          origin: { y: 0.6 }
-                        });
-                      }
-                    }
-                  }} />
-                </div>
-              </div>
-            ) : (
-              <div className="flex max-h-screen min-w-screen flex-col items-center justify-center  bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 md:p-8 shadow-inner overflow-auto">
-                <div className="mb-4 md:mb-6">
-                  {score / questions.length >= 0.8 ? (
-                    <div className="text-4xl md:text-6xl mb-2 md:mb-4">🏆</div>
-                  ) : score / questions.length >= 0.6 ? (
-                    <div className="text-4xl md:text-6xl mb-2 md:mb-4">🌟</div>
-                  ) : (
-                    <div className="text-4xl md:text-6xl mb-2 md:mb-4">📚</div>
-                  )}
-                </div>
-                
-                <h2 className="text-2xl md:text-4xl font-bold text-indigo-800 mb-2">Quiz Complete!</h2>
-                
-                <div className="relative w-32 h-32 md:w-48 md:h-48 mb-4 md:mb-6">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-3xl md:text-5xl font-bold text-indigo-700">
-                      {Math.round((score / questions.length) * 100)}%
-                    </div>
-                  </div>
-                  <svg className="w-full h-full" viewBox="0 0 100 100">
-                    <circle 
-                      cx="50" cy="50" r="45" 
-                      fill="none" 
-                      stroke="#e0e0e0" 
-                      strokeWidth="8"
-                    />
-                    <circle 
-                      cx="50" cy="50" r="45" 
-                      fill="none" 
-                      stroke={
-                        score / questions.length >= 0.8 ? "#4c1d95" :
-                        score / questions.length >= 0.6 ? "#6d28d9" : "#8b5cf6"
-                      }
-                      strokeWidth="8"
-                      strokeDasharray="283"
-                      strokeDashoffset={283 - (283 * (score / questions.length))}
-                      transform="rotate(-90 50 50)"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
-                
-                <p className="text-lg md:text-xl font-medium mb-2 md:mb-3">You scored {score} out of {questions.length} questions</p>
-                
-                <div className="bg-white p-3 md:p-4 rounded-lg shadow-md mb-4 md:mb-8 max-w-md">
-                  <p className="text-base md:text-lg text-gray-700">
-                    {score === questions.length 
-                      ? "Perfect score! You're a true master of this subject!" 
-                      : score / questions.length >= 0.8 
-                        ? "Excellent work! Your knowledge is impressive!" 
-                        : score / questions.length >= 0.6 
-                          ? "Good job! You've got a solid understanding!" 
-                          : "Keep learning! Every attempt brings new knowledge."}
-                  </p>
-                </div>
-                
-                <div className="mt-4 h-screen md:mt-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-                  <button
-                    className="px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-indigo-800 transition transform hover:scale-105"
-                    onClick={() => setIsQuizGenerated(false)}
-                  >
-                    <div className="flex items-center justify-center">
-                      <span className="mr-2">📚</span>
-                      <span>Take Another Quiz</span>
-                    </div>
-                  </button>
-                  
-                  <button
-                    className="px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg shadow-lg hover:from-purple-700 hover:to-pink-700 transition transform hover:scale-105"
-                    onClick={() => {
-                      setCurrentIndex(0);
-                      setScore(0);
-                      setQuizCompleted(false);
-                    }}
-                  >
-                    <div className="flex items-center justify-center">
-                      <span className="mr-2">🔄</span>
-                      <span>Retry This Quiz</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            )}
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div 
+          className="absolute w-64 h-64 rounded-full bg-purple-600/20 blur-3xl"
+          animate={{
+            x: [0, 100, 0],
+            y: [0, 50, 0],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+          style={{ top: '10%', left: '15%' }}
+        />
+        <motion.div 
+          className="absolute w-96 h-96 rounded-full bg-indigo-500/10 blur-3xl"
+          animate={{
+            x: [0, -70, 0],
+            y: [0, 100, 0],
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+          style={{ bottom: '5%', right: '10%' }}
+        />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-center z-10"
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.7 }}
+          className="flex justify-center mb-6"
+        >
+          <div className="relative">
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full blur-lg"
+              animate={{ 
+                scale: [1, 1.1, 1],
+                opacity: [0.7, 0.9, 0.7]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity
+              }}
+            />
+            <div className="bg-gray-900 p-4 rounded-full relative z-10">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
           </div>
-        </div>
-      )}
+        </motion.div>
+
+        <motion.h1 
+          className="text-5xl font-bold text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-300"
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.7 }}
+        >
+          AI Quiz Generator
+        </motion.h1>
+        
+        <motion.p 
+          className="text-xl text-indigo-100/80 mb-8 max-w-2xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.7 }}
+        >
+          Create customized quizzes for your projects in seconds using advanced AI. Perfect for educators, developers, and project managers.
+        </motion.p>
+      </motion.div>
+
+      
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.8, duration: 0.5 }}
+        className="relative"
+      >
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full blur-md"
+          animate={{ 
+            scale: [1, 1.05, 1],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity
+          }}
+        />
+        <motion.button
+          onClick={handleStartClick}
+          className="relative z-10 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xl px-10 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:from-purple-500 hover:to-indigo-500"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Start Now
+        </motion.button>
+      </motion.div>
+
+      <motion.div 
+        className="mt-8 text-indigo-200/50 text-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.9, duration: 0.5 }}
+      >
+        Free to get started
+      </motion.div>
     </div>
   );
 }

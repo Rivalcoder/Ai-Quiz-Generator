@@ -7,7 +7,6 @@ export default function QuizCard({ question, onAnswer }) {
   const [timeRemaining, setTimeRemaining] = useState(30);
   const [showHint, setShowHint] = useState(false);
   const [shuffledOptions, setShuffledOptions] = useState([]);
-  const [autoProgressCounter, setAutoProgressCounter] = useState(null);
 
   // Function to shuffle array (Fisher-Yates algorithm)
   const shuffleArray = (array) => {
@@ -26,7 +25,6 @@ export default function QuizCard({ question, onAnswer }) {
     setTimeRemaining(30);
     setShowHint(false);
     setShuffledOptions(shuffleArray(question.options));
-    setAutoProgressCounter(null);
   }, [question]);
 
   useEffect(() => {
@@ -37,22 +35,6 @@ export default function QuizCard({ question, onAnswer }) {
       setShowAnswer(true);
     }
   }, [timeRemaining, showAnswer]);
-
-  // Auto-progress countdown after showing answer
-  useEffect(() => {
-    if (showAnswer && autoProgressCounter === null) {
-      setAutoProgressCounter(2);
-    }
-    
-    if (autoProgressCounter !== null && autoProgressCounter > 0) {
-      const timer = setTimeout(() => {
-        setAutoProgressCounter(autoProgressCounter - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (autoProgressCounter === 0) {
-      handleNextQuestion();
-    }
-  }, [showAnswer, autoProgressCounter]);
 
   // Calculate time indicator color based on remaining time
   const getTimeColor = () => {
@@ -69,31 +51,24 @@ export default function QuizCard({ question, onAnswer }) {
   };
 
   const handleNextQuestion = () => {
-    // Submit the answer and move to next question
+    // Only now submit the answer and move to next question
     onAnswer(selected === question.answer);
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-xl p-4 mx-auto w-full max-h-full border border-gray-200 flex flex-col">
-      <div className="flex justify-end items-center mb-2">
-        <div className="flex items-center gap-2">
-          {showAnswer && autoProgressCounter !== null && (
-            <div className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-sm font-medium">
-              Next in {autoProgressCounter}s
-            </div>
-          )}
-          <div className={`px-3 py-1 rounded-full text-sm font-medium flex items-center ${getTimeColor()}`}>
-            <Clock size={16} className="inline-block mr-1" /> {timeRemaining}s
-          </div>
+    <div className="bg-white shadow-lg rounded-xl p-6 mx-auto w-full max-h-full border border-gray-200 flex flex-col">
+      <div className="flex justify-between items-center mb-4">
+        <div className="text-xl font-semibold text-gray-800 flex-grow">{question.question}</div>
+        <div className={`px-4 py-2 rounded-full text-sm font-medium flex items-center ${getTimeColor()}`}>
+          <Clock size={16} className="inline-block mr-2" /> {timeRemaining}s
         </div>
       </div>
 
-      {/* Options - Code snippet is now in the main layout */}
-      <div className="mt-2 space-y-2 flex-grow overflow-y-auto max-h-72">
+      <div className="mt-4 space-y-3 flex-grow overflow-y-auto max-h-96">
         {shuffledOptions.map((option, index) => (
           <button
             key={index}
-            className={`w-full text-black p-3 rounded-lg text-left transition-all duration-200 flex justify-between items-center ${
+            className={`w-full text-black p-4 rounded-lg text-left transition-all duration-200 flex justify-between items-center ${
               !showAnswer 
                 ? "hover:bg-indigo-50 border border-gray-200" 
                 : selected === option
@@ -120,7 +95,7 @@ export default function QuizCard({ question, onAnswer }) {
       </div>
 
       {!showAnswer && (
-        <div className="mt-3 flex justify-center">
+        <div className="mt-4 flex justify-center">
           <button
             className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-medium flex items-center hover:bg-indigo-200 transition"
             onClick={() => setShowHint(!showHint)}
@@ -132,13 +107,13 @@ export default function QuizCard({ question, onAnswer }) {
       )}
 
       {showHint && !showAnswer && (
-        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
+        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
           <p>Think about the code structure and what this component does in the application.</p>
         </div>
       )}
 
       {showAnswer && (
-        <div className={`mt-3 p-3 rounded-lg ${selected === question.answer ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
+        <div className={`mt-4 p-4 rounded-lg ${selected === question.answer ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
           <p className={`font-medium ${selected === question.answer ? "text-green-700" : "text-red-700"}`}>
             {selected === question.answer ? (
               <span className="flex items-center">
@@ -152,16 +127,16 @@ export default function QuizCard({ question, onAnswer }) {
               </span>
             )}
           </p>
-          <p className="mt-1 text-gray-700">
+          <p className="mt-2 text-gray-700">
             {question.explanation || "Understanding this concept is important for writing effective code."}
           </p>
         </div>
       )}
 
       {showAnswer && (
-        <div className="mt-3 flex justify-end">
+        <div className="mt-4 flex justify-end">
           <button
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium flex items-center hover:bg-indigo-700 transition"
+            className="px-5 py-2 bg-indigo-600 text-white rounded-lg font-medium flex items-center hover:bg-indigo-700 transition"
             onClick={handleNextQuestion}
           >
             Next Question
