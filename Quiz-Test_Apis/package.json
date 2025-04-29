@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@ai-sdk/google": "^1.1.25",
+    "ai": "^4.1.61",
+    "dotenv": "^16.4.7",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  }
+}
